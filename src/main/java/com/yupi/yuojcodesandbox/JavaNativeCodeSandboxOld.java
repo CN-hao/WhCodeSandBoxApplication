@@ -86,7 +86,17 @@ public class JavaNativeCodeSandboxOld implements CodeSandbox {
         try {
             Process compileProcess = Runtime.getRuntime().exec(compileCmd);
             ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(compileProcess, "编译");
-
+            if(executeMessage.getExitValue() != 0) {
+                System.out.println("编译失败");
+                // 编译失败，直接返回
+                ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
+                executeCodeResponse.setOutputList(new ArrayList<>());
+                executeCodeResponse.setMessage(executeMessage.getErrorMessage());
+                // 表示代码沙箱错误
+                executeCodeResponse.setStatus(2);
+                executeCodeResponse.setJudgeInfo(new JudgeInfo());
+                return executeCodeResponse;
+            }
             System.out.println(executeMessage);
         } catch (Exception e) {
             return getErrorResponse(e);
