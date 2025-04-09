@@ -43,6 +43,7 @@ public class JavaDockerCodeSandboxOld implements CodeSandbox {
 
     private static final Boolean FIRST_INIT = true;
 
+
     public static void main(String[] args) {
         JavaDockerCodeSandboxOld javaNativeCodeSandbox = new JavaDockerCodeSandboxOld();
         ExecuteCodeRequest executeCodeRequest = new ExecuteCodeRequest();
@@ -122,7 +123,8 @@ public class JavaDockerCodeSandboxOld implements CodeSandbox {
         hostConfig.withMemory(100 * 1000 * 1000L);
         hostConfig.withMemorySwap(0L);
         hostConfig.withCpuCount(1L);
-        hostConfig.withSecurityOpts(Arrays.asList("seccomp=安全管理配置字符串"));
+        String seccompConfig = "{\"defaultAction\":\"SCMP_ACT_ALLOW\",\"syscalls\":[{\"names\":[\"execve\"],\"action\":\"SCMP_ACT_ERRNO\"}]}";
+        hostConfig.withSecurityOpts(Arrays.asList("seccomp=" + seccompConfig));
         hostConfig.setBinds(new Bind(userCodeParentPath, new Volume("/app")));
         CreateContainerResponse createContainerResponse = containerCmd
                 .withHostConfig(hostConfig)

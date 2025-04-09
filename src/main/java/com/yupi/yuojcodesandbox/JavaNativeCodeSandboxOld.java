@@ -93,7 +93,7 @@ public class JavaNativeCodeSandboxOld implements CodeSandbox {
                 executeCodeResponse.setOutputList(new ArrayList<>());
                 executeCodeResponse.setMessage(executeMessage.getErrorMessage());
                 // 表示代码沙箱错误
-                executeCodeResponse.setStatus(2);
+                executeCodeResponse.setStatus(ExecuteCodeResponse.Status.COMPILE_ERROR.getCode());
                 executeCodeResponse.setJudgeInfo(new JudgeInfo());
                 return executeCodeResponse;
             }
