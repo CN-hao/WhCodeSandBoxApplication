@@ -6,7 +6,6 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.model.*;
-import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.yupi.yuojcodesandbox.model.ExecuteCodeRequest;
 import com.yupi.yuojcodesandbox.model.ExecuteCodeResponse;
@@ -30,22 +29,17 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate {
 
     private static final long TIME_OUT = 5000L;
     private static final boolean FIRST_INIT = true;
-    public static void main(String[] args) {
-        JavaDockerCodeSandbox javaNativeCodeSandbox = new JavaDockerCodeSandbox();
-        ExecuteCodeRequest executeCodeRequest = new ExecuteCodeRequest();
-        executeCodeRequest.setInputList(Arrays.asList("1 2", "1 3"));
-        String code = ResourceUtil.readStr("testCode/simpleCompute/Main.java", StandardCharsets.UTF_8);
-        executeCodeRequest.setCode(code);
-        executeCodeRequest.setLanguage("java");
-        ExecuteCodeResponse executeCodeResponse = javaNativeCodeSandbox.executeCode(executeCodeRequest);
-        System.out.println(executeCodeResponse);
+
+    private final DockerClient dockerClient;
+
+    public JavaDockerCodeSandbox(DockerClient dockerClient) {
+        this.dockerClient = dockerClient;
     }
 
     @Override
     protected File saveCodeToFile(String code) {
         // 使用父类的实现或自定义逻辑
-        throw  new UnsupportedOperationException("Not implemented yet");
-
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
@@ -55,9 +49,6 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate {
 
     @Override
     protected List<ExecuteMessage> runFile(File userCodeFile, List<String> inputList) {
-        // 获取默认的 Docker Client
-        DockerClient dockerClient = DockerClientBuilder.getInstance().build();
-
         // 拉取镜像
         String image = "openjdk:8-alpine";
         if (FIRST_INIT) {
@@ -81,7 +72,6 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate {
 
         // 创建容器
         CreateContainerCmd containerCmd = dockerClient.createContainerCmd(image);
-
 
         HostConfig hostConfig = DockerUtils.createRestrictedHostConfig(); // 使用提取的配置方法
 
@@ -199,12 +189,12 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate {
 
     @Override
     protected ExecuteCodeResponse getOutputResponse(List<ExecuteMessage> executeMessageList) {
-        throw  new UnsupportedOperationException("Not implemented yet");
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
     protected void deleteFile(File userCodeFile) {
         // 使用父类的实现或自定义逻辑
-        throw  new UnsupportedOperationException("Not implemented yet");
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 }
