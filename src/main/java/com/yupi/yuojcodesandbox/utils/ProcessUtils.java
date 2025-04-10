@@ -102,6 +102,7 @@ public class ProcessUtils {
             String compileOutputLine;
             while ((compileOutputLine = bufferedReader.readLine()) != null) {
                 compileOutputStringBuilder.append(compileOutputLine);
+                System.out.println(compileOutputLine+"ggg");
             }
             executeMessage.setMessage(compileOutputStringBuilder.toString());
             // 记得资源的释放，否则会卡死
