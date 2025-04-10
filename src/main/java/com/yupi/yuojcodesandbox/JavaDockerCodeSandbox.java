@@ -43,14 +43,20 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate {
         System.out.println(executeCodeResponse);
     }
 
-    /**
-     * 3、创建容器，把文件复制到容器内
-     * @param userCodeFile
-     * @param inputList
-     * @return
-     */
     @Override
-    public List<ExecuteMessage> runFile(File userCodeFile, List<String> inputList) {
+    protected File saveCodeToFile(String code) {
+        // 使用父类的实现或自定义逻辑
+        throw  new UnsupportedOperationException("Not implemented yet");
+
+    }
+
+    @Override
+    protected void compileFile(File userCodeFile) {
+        // Docker 环境下无需单独编译
+    }
+
+    @Override
+    protected List<ExecuteMessage> runFile(File userCodeFile, List<String> inputList) {
         String userCodeParentPath = userCodeFile.getParentFile().getAbsolutePath();
         // 获取默认的 Docker Client
         DockerClient dockerClient = DockerClientBuilder.getInstance().build();
@@ -85,7 +91,7 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate {
         hostConfig.withMemory(100 * 1000 * 1000L);
         hostConfig.withMemorySwap(0L);
         hostConfig.withCpuCount(1L);
-        hostConfig.withSecurityOpts(Arrays.asList("seccomp=安全管理配置字符串"));
+        hostConfig.withSecurityOpts(Arrays.asList("seccomp={}"));
         hostConfig.setBinds(new Bind(userCodeParentPath, new Volume("/app")));
         CreateContainerResponse createContainerResponse = containerCmd
                 .withHostConfig(hostConfig)
@@ -199,7 +205,15 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate {
         }
         return executeMessageList;
     }
+
+    @Override
+    protected ExecuteCodeResponse getOutputResponse(List<ExecuteMessage> executeMessageList) {
+        throw  new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    protected void deleteFile(File userCodeFile) {
+        // 使用父类的实现或自定义逻辑
+        throw  new UnsupportedOperationException("Not implemented yet");
+    }
 }
-
-
-

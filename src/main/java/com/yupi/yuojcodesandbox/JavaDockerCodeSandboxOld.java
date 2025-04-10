@@ -37,9 +37,10 @@ public class JavaDockerCodeSandboxOld implements CodeSandbox {
 
     private static final long TIME_OUT = 5000L;
 
-    private static final String SECURITY_MANAGER_PATH = "C:\\code\\yuoj-code-sandbox\\src\\main\\resources\\security";
 
-    private static final String SECURITY_MANAGER_CLASS_NAME = "MySecurityManager";
+
+    private static final String SECCOMP_CONFIG = "{}";
+
 
     private static final Boolean FIRST_INIT = true;
 
@@ -123,8 +124,7 @@ public class JavaDockerCodeSandboxOld implements CodeSandbox {
         hostConfig.withMemory(100 * 1000 * 1000L);
         hostConfig.withMemorySwap(0L);
         hostConfig.withCpuCount(1L);
-        String seccompConfig = "{\"defaultAction\":\"SCMP_ACT_ALLOW\",\"syscalls\":[{\"names\":[\"execve\"],\"action\":\"SCMP_ACT_ERRNO\"}]}";
-        hostConfig.withSecurityOpts(Arrays.asList("seccomp=" + seccompConfig));
+        hostConfig.withSecurityOpts(Arrays.asList("seccomp=" + SECCOMP_CONFIG));
         hostConfig.setBinds(new Bind(userCodeParentPath, new Volume("/app")));
         CreateContainerResponse createContainerResponse = containerCmd
                 .withHostConfig(hostConfig)
@@ -153,6 +153,7 @@ public class JavaDockerCodeSandboxOld implements CodeSandbox {
                     .withAttachStderr(true)
                     .withAttachStdin(true)
                     .withAttachStdout(true)
+                    
                     .exec();
             System.out.println("创建执行命令：" + execCreateCmdResponse);
 
@@ -272,6 +273,7 @@ public class JavaDockerCodeSandboxOld implements CodeSandbox {
             boolean del = FileUtil.del(userCodeParentPath);
             System.out.println("删除" + (del ? "成功" : "失败"));
         }
+        // 删除容器
         return executeCodeResponse;
     }
 

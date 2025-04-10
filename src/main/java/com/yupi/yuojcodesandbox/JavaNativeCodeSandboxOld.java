@@ -60,14 +60,6 @@ public class JavaNativeCodeSandboxOld implements CodeSandbox {
         String code = executeCodeRequest.getCode();
         String language = executeCodeRequest.getLanguage();
 
-       //  校验代码中是否包含黑名单中的命令
-//        FoundWord foundWord = WORD_TREE.matchWord(code);
-//        if (foundWord != null) {
-//            System.out.println("包含禁止词：" + foundWord.getFoundWord());
-//            return null;
-//        }
-
-//        1. 把用户的代码保存为文件
 
         String userDir = System.getProperty("user.dir");
         String globalCodePathName = userDir + File.separator + GLOBAL_CODE_DIR_NAME;
