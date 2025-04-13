@@ -27,7 +27,7 @@ public class SandBoxTest {
                 .inputList(List.of("1", "2"))
                 .code(code)
                 .language("java")
-                .memoryLimit(128)
+                .memoryLimit(128*1024*1024)
                 .timeLimit(1000)
                 .build();
         ExecuteCodeResponse executeCodeResponse = dockerCodeSandbox.executeCode(executeCodeRequest);
@@ -72,7 +72,7 @@ public class SandBoxTest {
                 }
                 """;
         ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
-                .inputList(List.of("\n1\n2"))
+                .inputList(List.of("\n1\n\n6"))
                 .code(code)
                 .language("java")
                 .memoryLimit(128*1024*1024)
@@ -88,7 +88,12 @@ public class SandBoxTest {
     void testCpp() throws IOException {
         DockerCodeSandbox dockerCodeSandbox = new DockerCodeSandbox("cpp");
         String code = """
-                p
+                #include <iostream>
+                using namespace std;
+                int main() {
+                    cout << "Hello World" << endl;
+                    return 0;
+                }
                 """;
         ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
                 .inputList(List.of("1", "2"))
@@ -107,7 +112,7 @@ public class SandBoxTest {
     void testRunError() throws IOException {
         DockerCodeSandbox dockerCodeSandbox = new DockerCodeSandbox("python");
         String code = """
-                print(1\\0)
+                print(1/0)
                 """;
         ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
                 .inputList(List.of("1", "2"))
@@ -115,6 +120,63 @@ public class SandBoxTest {
                 .language("python")
                 .memoryLimit(128*1024*1024)
                 .timeLimit(1000)
+                .build();
+        ExecuteCodeResponse executeCodeResponse = dockerCodeSandbox.executeCode(executeCodeRequest);
+        System.out.println(executeCodeResponse);
+        dockerCodeSandbox.close();
+    }
+    //test Memory Limit
+    @Test
+    void testMemoryLimit() throws IOException {
+        DockerCodeSandbox dockerCodeSandbox = new DockerCodeSandbox("cpp");
+        String code = """
+                #include <iostream>
+                 #include <cstdlib>
+                 #include <cstring>
+                 int main() {
+                     size_t size = 300 * 1024 * 1024; // 分配 300MB
+                     char* buffer = (char*)malloc(size);
+                     if (!buffer) {
+                         std::cerr << "分配失败！" << std::endl;
+                         return 1;
+                     }
+                     for (size_t i = 0; i < size; i += 4096) {
+                         buffer[i] = 1;
+                     }
+                     free(buffer);
+                     return 0;
+                 }
+                
+                """;
+        ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
+                .inputList(List.of("1", "2"))
+                .code(code)
+                .language("cpp")
+                .memoryLimit(10)
+                .timeLimit(1000)
+                .build();
+        ExecuteCodeResponse executeCodeResponse = dockerCodeSandbox.executeCode(executeCodeRequest);
+        System.out.println(executeCodeResponse);
+        dockerCodeSandbox.close();
+    }
+
+    //test timeout
+    @Test
+    void testTimeout() throws IOException {
+        DockerCodeSandbox dockerCodeSandbox = new DockerCodeSandbox("cpp");
+        String code = """
+                #include <iostream>
+                #include <unistd.h>
+                using namespace std;
+                using namespace std;
+                int main() {do{sleep;}while(1);}
+                """;
+        ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
+                .inputList(List.of("1", "2"))
+                .code(code)
+                .language("cpp")
+                .memoryLimit(128*1024*1024)
+                .timeLimit(5000)
                 .build();
         ExecuteCodeResponse executeCodeResponse = dockerCodeSandbox.executeCode(executeCodeRequest);
         System.out.println(executeCodeResponse);

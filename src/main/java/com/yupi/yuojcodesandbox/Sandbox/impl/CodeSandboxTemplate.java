@@ -55,7 +55,6 @@ public abstract class CodeSandboxTemplate implements CodeSandbox {
      */
     @Override
     public ExecuteCodeResponse executeCode(ExecuteCodeRequest executeCodeRequest) {
-        List<String> inputList = executeCodeRequest.getInputList();
         String code = executeCodeRequest.getCode();
         ExecuteCodeResponse outputResponse = null;
         try{
@@ -140,28 +139,42 @@ public abstract class CodeSandboxTemplate implements CodeSandbox {
      */
     protected ExecuteCodeResponse getOutputResponse(List<ExecuteMessage> executeMessageList) {
         ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
+        JudgeInfo resJudgeInfo = new JudgeInfo();
         List<String> outputList = new ArrayList<>();
         long maxTime = 0;
-        for (ExecuteMessage executeMessage : executeMessageList) {
-            String errorMessage = executeMessage.getErrorMessage();
-            if (StrUtil.isNotBlank(errorMessage)) {
-                executeCodeResponse.setMessage(errorMessage);
-                executeCodeResponse.setStatus(3);
+        long maxMemory = 0;
+        for (int i = 0; i < executeMessageList.size(); i++) {
+            outputList.add(executeMessageList.get(i).getOutput());
+            maxTime = Math.max(maxTime, executeMessageList.get(i).getTime());
+            maxMemory= Math.max(maxMemory, executeMessageList.get(i).getMemory());
+            if(executeMessageList.get(i).getStatus().getCode() != ExecuteMessage.Status.SUCCESS.getCode()) {
+                switch (executeMessageList.get(i).getStatus()) {
+                    case TIMEOUT -> {
+                        executeCodeResponse.setStatus(ExecuteCodeResponse.Status.TIMEOUT.getCode());
+                        executeCodeResponse.setMessage(ExecuteMessage.Status.TIMEOUT.getMessage());
+                    }
+                    case MEMORY_LIMIT_EXCEEDED -> {
+                        executeCodeResponse.setStatus(ExecuteCodeResponse.Status.MEMORY_LIMIT_EXCEEDED.getCode());
+                        executeCodeResponse.setMessage(ExecuteCodeResponse.Status.MEMORY_LIMIT_EXCEEDED.getMessage());
+                    }
+                    case RUNTIME_ERROR -> {
+                        executeCodeResponse.setStatus(ExecuteCodeResponse.Status.RUNTIME_ERROR.getCode());
+                        executeCodeResponse.setMessage(ExecuteCodeResponse.Status.RUNTIME_ERROR.getMessage());
+                    }
+                }
+                resJudgeInfo.setMessage(executeMessageList.get(i).getErrorMessage());
+                executeCodeResponse.setErrorId((long) i);
                 break;
             }
-            outputList.add(executeMessage.getOutput());
-            Long time = executeMessage.getTime();
-            if (time != null) {
-                maxTime = Math.max(maxTime, time);
-            }
         }
-        if (outputList.size() == executeMessageList.size()) {
-            executeCodeResponse.setStatus(1);
+        if (executeCodeResponse.getStatus() == null) {
+            executeCodeResponse.setStatus(ExecuteCodeResponse.Status.SUCCESS.getCode());
+            executeCodeResponse.setMessage(ExecuteMessage.Status.SUCCESS.getMessage());
         }
         executeCodeResponse.setOutputList(outputList);
-        JudgeInfo judgeInfo = new JudgeInfo();
-        judgeInfo.setTime(maxTime);
-        executeCodeResponse.setJudgeInfo(judgeInfo);
+        resJudgeInfo.setTime(maxTime);
+        resJudgeInfo.setMemory(maxMemory);
+        executeCodeResponse.setJudgeInfo(resJudgeInfo);
         return executeCodeResponse;
     }
 

@@ -1,5 +1,6 @@
 package com.yupi.yuojcodesandbox.Sandbox.impl;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.StrUtil;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerCmd;
@@ -16,7 +17,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StopWatch;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -36,25 +36,19 @@ public  class DockerCodeSandbox extends  CodeSandboxTemplate {
     public DockerCodeSandbox(String language) {
         super(language);
         DockerUtils.pullImageIfNotExists(dockerClient, sandboxLanguageConfig.getImageName());
+        initContainer();
     }
 
     @Override
     protected List<ExecuteMessage> runFile(File userCodeFile, ExecuteCodeRequest executeCodeRequest) {
-
-
         List<String> inputList = executeCodeRequest.getInputList();
         List<ExecuteMessage> executeMessageList = new ArrayList<>();
-
-        initContainer();
-
 
         for (String inputArgs : inputList) {
             ByteArrayOutputStream stdout = new ByteArrayOutputStream();
             ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
             ExecuteMessage executeMessage = new ExecuteMessage();
             executeMessage.setMemory(0L);
-
             long time =-1;
             StopWatch stopWatch = new StopWatch();
 
@@ -62,10 +56,8 @@ public  class DockerCodeSandbox extends  CodeSandboxTemplate {
                     sandboxLanguageConfig.getOutputFileName());
             runCmd= "echo \""+inputArgs+"\" | "+ runCmd;
             String[] cmdArray = {"sh","-c",runCmd};
-
             // 创建执行命令 准备后续开始执行
             String execId = dockerCreateExecCmd(cmdArray);
-
             // 获取内存占用等使用状态
             ResultCallback<Statistics> statisticsCallback = new ResultCallback.Adapter<>(){
                 @Override
@@ -76,15 +68,11 @@ public  class DockerCodeSandbox extends  CodeSandboxTemplate {
                             , executeMessage.getMemory()));
                     if (executeMessage.getMemory() > executeCodeRequest.getMemoryLimit()) {
                         executeMessage.setErrorMessage("内存超限");
-                        executeMessage.setStatus(ExecuteMessage.Status.MEMORY_LIMIT_EXCEEDED.getCode());
-                        executeMessage.setMemory(0L);
+                        executeMessage.setStatus(ExecuteMessage.Status.MEMORY_LIMIT_EXCEEDED);
                     }
                 }
             };
-
-            dockerClient.statsCmd(containerId)
-                    .exec(statisticsCallback);
-
+            dockerClient.statsCmd(containerId).exec(statisticsCallback);
             try {
                 stopWatch.start();
 
@@ -96,27 +84,34 @@ public  class DockerCodeSandbox extends  CodeSandboxTemplate {
                                 , TimeUnit.MILLISECONDS);
 
                 stopWatch.stop();
-
-                time = stopWatch.getLastTaskTimeMillis();
+                time= stopWatch.getTotalTimeMillis();
 
             } catch (InterruptedException e) {
-                executeMessage.setErrorMessage("执行超时");
-                executeMessage.setStatus(ExecuteMessage.Status.TIMEOUT.getCode());
+                log.error("wtf why", e);
             }
 
-            if(executeMessage.getStatus() == null) {//超时or 内存超限
-                executeMessage.setOutput(stdout.toString(StandardCharsets.UTF_8).trim());
-                executeMessage.setErrorMessage(stderr.toString(StandardCharsets.UTF_8).trim());
-                executeMessage.setTime(time);
-                executeMessage.setExitValue(0);
-                executeMessage.setStatus(ExecuteMessage.Status.SUCCESS.getCode());
+            executeMessage.setOutput(stdout.toString(StandardCharsets.UTF_8).trim());
+            executeMessage.setErrorMessage(stderr.toString(StandardCharsets.UTF_8).trim());
+            executeMessage.setTime(time);
+
+            if(time> executeCodeRequest.getMemoryLimit()||time>SandboxLanguageConfig.TIME_OUT) {
+                executeMessage.setStatus(ExecuteMessage.Status.TIMEOUT);
+                executeMessage.setErrorMessage("超时");
             }
 
+            if(executeMessage.getStatus() == null) {//not 超时or 内存超限
+                if(StrUtil.isBlank(executeMessage.getErrorMessage())) {
+                    executeMessage.setExitValue(0);
+                    executeMessage.setStatus(ExecuteMessage.Status.SUCCESS);
+                    executeMessage.setErrorMessage("成功");
+                } else {
+                    executeMessage.setStatus(ExecuteMessage.Status.RUNTIME_ERROR);
+                }
+            }
             executeMessageList.add(executeMessage);
         }
         return executeMessageList;
     }
-
 
     private String dockerCreateExecCmd(String[] cmdArray) {
         ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
@@ -126,10 +121,8 @@ public  class DockerCodeSandbox extends  CodeSandboxTemplate {
                 .withAttachStdin(true)
                 .withAttachStdout(true)
                 .exec();
-        String execId = execCreateCmdResponse.getId();
-        return execId;
+        return  execCreateCmdResponse.getId();
     }
-
 
     private void initContainer() {
         // 创建容器
@@ -150,12 +143,18 @@ public  class DockerCodeSandbox extends  CodeSandboxTemplate {
         dockerClient.startContainerCmd(containerId).exec();
     }
 
-
     @Override
-    public void close() throws IOException {
+    public void close()  {
         FileUtil.del(userCodeParentPath);
         if(containerId != null) {
-            DockerUtils.stopContainer(dockerClient, containerId);
+            new Thread(() -> {
+                try {
+                    dockerClient.stopContainerCmd(containerId).exec();
+                    dockerClient.removeContainerCmd(containerId).exec();
+                } catch (Exception e) {
+                    log.error("Error while closing container", e);
+                }
+            }).start();
         }
     }
 

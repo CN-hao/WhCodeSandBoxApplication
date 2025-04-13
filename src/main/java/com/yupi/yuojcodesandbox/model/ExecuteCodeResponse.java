@@ -28,6 +28,12 @@ public class ExecuteCodeResponse {
     private JudgeInfo judgeInfo;
 
     /**
+     * 发生错误的id
+     */
+    private Long errorId;
+
+
+    /**
      * status 枚举类
      * 0：成功
      * 1：失败
@@ -40,11 +46,11 @@ public class ExecuteCodeResponse {
     @Getter
     public  enum Status {
         SUCCESS(0, "成功"),
-        ERROR(1, "失败"),
-        TIMEOUT(2, "超时"),
-        MEMORY_LIMIT_EXCEEDED(3, "内存超限"),
-        COMPILE_ERROR(4, "编译错误"),
-        RUNTIME_ERROR(5, "运行错误");
+        TIMEOUT(1, "超时"),
+        MEMORY_LIMIT_EXCEEDED(2, "内存超限"),
+        COMPILE_ERROR(3, "编译错误"),
+        RUNTIME_ERROR(4, "运行错误"),
+        UNSUPPORTED_LANGUAGE(5, "不支持的语言");
 
         private final int code;
         private final String message;

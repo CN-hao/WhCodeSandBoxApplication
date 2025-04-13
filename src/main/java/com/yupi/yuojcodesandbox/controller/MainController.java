@@ -1,5 +1,6 @@
 package com.yupi.yuojcodesandbox.controller;
 
+import com.yupi.yuojcodesandbox.Sandbox.impl.DockerCodeSandbox;
 import com.yupi.yuojcodesandbox.model.ExecuteCodeRequest;
 import com.yupi.yuojcodesandbox.model.ExecuteCodeResponse;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,6 +46,14 @@ public class MainController {
             throw new RuntimeException("请求参数为空");
         }
 
-        throw new UnsupportedOperationException("Not implemented yet");
+        try (DockerCodeSandbox dockerCodeSandbox = new DockerCodeSandbox(executeCodeRequest.getLanguage())) {
+            return dockerCodeSandbox.executeCode(executeCodeRequest);
+        }catch (Exception e){
+            return ExecuteCodeResponse.builder()
+                    .status(ExecuteCodeResponse.Status.UNSUPPORTED_LANGUAGE.getCode())
+                    .message(ExecuteCodeResponse.Status.UNSUPPORTED_LANGUAGE.getMessage())
+                    .build();
+        }
+
     }
 }

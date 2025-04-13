@@ -24,7 +24,7 @@ public class SandboxLanguageConfig {
         }
         {
             put("cpp", new SandboxLanguageConfig("Main.cpp", "Main.out",
-                    "busybox:glibc",
+                    "gcc:latest",
                     "g++ -std=c++11  %s -o %s",
                     "./%s"));
         }
