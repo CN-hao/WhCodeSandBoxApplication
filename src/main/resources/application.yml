@@ -3,3 +3,5 @@ server:
 #spring:
 #  datasource:
 #    password: 123456
+codesandbox:
+  global_code_dir: tmpCode

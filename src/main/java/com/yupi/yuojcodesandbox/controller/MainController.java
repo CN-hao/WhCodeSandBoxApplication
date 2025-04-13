@@ -1,6 +1,5 @@
 package com.yupi.yuojcodesandbox.controller;
 
-import com.yupi.yuojcodesandbox.JavaCodeSandboxTemplate;
 import com.yupi.yuojcodesandbox.model.ExecuteCodeRequest;
 import com.yupi.yuojcodesandbox.model.ExecuteCodeResponse;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,8 +19,6 @@ public class MainController {
 
     private static final String AUTH_REQUEST_SECRET = "secretKey";
 
-    @Resource
-    private JavaCodeSandboxTemplate javaCodeSandboxTemplate;
 
 
     @GetMapping("/health")
@@ -47,6 +44,7 @@ public class MainController {
         if (executeCodeRequest == null) {
             throw new RuntimeException("请求参数为空");
         }
-            return javaCodeSandboxTemplate.executeCode(executeCodeRequest);
+
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 }

@@ -18,4 +18,8 @@ public class ExecuteCodeRequest {
     private String code;
 
     private String language;
+
+    private Integer timeLimit;
+
+    private Integer memoryLimit;
 }
