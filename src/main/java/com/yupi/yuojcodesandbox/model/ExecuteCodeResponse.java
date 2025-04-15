@@ -50,7 +50,8 @@ public class ExecuteCodeResponse {
         MEMORY_LIMIT_EXCEEDED(2, "内存超限"),
         COMPILE_ERROR(3, "编译错误"),
         RUNTIME_ERROR(4, "运行错误"),
-        UNSUPPORTED_LANGUAGE(5, "不支持的语言");
+        UNSUPPORTED_LANGUAGE(5, "不支持的语言"),
+        BAD_REQUEST(6, "请求错误");
 
         private final int code;
         private final String message;

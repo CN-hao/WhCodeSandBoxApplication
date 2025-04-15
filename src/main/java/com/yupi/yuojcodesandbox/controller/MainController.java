@@ -45,6 +45,16 @@ public class MainController {
         if (executeCodeRequest == null) {
             throw new RuntimeException("请求参数为空");
         }
+        if (executeCodeRequest.getLanguage() == null||
+                executeCodeRequest.getTimeLimit() == null ||
+                executeCodeRequest.getMemoryLimit() == null||
+                executeCodeRequest.getCode() == null||
+                executeCodeRequest.getInputList() == null) {
+            return ExecuteCodeResponse.builder()
+                    .status(ExecuteCodeResponse.Status.BAD_REQUEST.getCode())
+                    .message(ExecuteCodeResponse.Status.BAD_REQUEST.getMessage())
+                    .build();
+        }
 
         try (DockerCodeSandbox dockerCodeSandbox = new DockerCodeSandbox(executeCodeRequest.getLanguage())) {
             return dockerCodeSandbox.executeCode(executeCodeRequest);

@@ -94,7 +94,7 @@ public  class DockerCodeSandbox extends  CodeSandboxTemplate {
             executeMessage.setErrorMessage(stderr.toString(StandardCharsets.UTF_8).trim());
             executeMessage.setTime(time);
 
-            if(time> executeCodeRequest.getMemoryLimit()||time>SandboxLanguageConfig.TIME_OUT) {
+            if(time> executeCodeRequest.getTimeLimit()||time>SandboxLanguageConfig.TIME_OUT) {
                 executeMessage.setStatus(ExecuteMessage.Status.TIMEOUT);
                 executeMessage.setErrorMessage("超时");
             }
@@ -150,7 +150,6 @@ public  class DockerCodeSandbox extends  CodeSandboxTemplate {
             new Thread(() -> {
                 try {
                     dockerClient.stopContainerCmd(containerId).exec();
-                    dockerClient.removeContainerCmd(containerId).exec();
                 } catch (Exception e) {
                     log.error("Error while closing container", e);
                 }
